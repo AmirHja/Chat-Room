@@ -1,4 +1,5 @@
 import random
+import uuid
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -11,7 +12,7 @@ from django.contrib.auth.models import (
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
-    def _create_user(self, username, password, is_staff, is_supper, **extra_fields):
+    def _create_user(self, username, password, is_staff, is_super, **extra_fields):
         """
         Create and save a user with the given username and password.
         """
@@ -22,12 +23,12 @@ class UserManager(BaseUserManager):
             username=username,
             is_staff=is_staff,
             is_active=True,
-            is_superuser=is_supper,
+            is_superuser=is_super,
             date_joined=now,
             **extra_fields
         )
 
-        if not extra_fields.get('no password'):
+        if password:
             user.set_password(password)
 
         user.save(using=self._db)
@@ -35,24 +36,16 @@ class UserManager(BaseUserManager):
 
     def create_user(self, username=None, password=None, **extra_fields):
         if username is None:
-            username = 'user@'
-            while User.objects.filter(username=username).exists():
-                username = username.split('@')[0] + "@"
-                for _ in range(8):
-                    username += str(random.randint(10, 99))
+            username = f"admin_{uuid.uuid4().hex[:8]}"
 
-        return self._create_user(username, password, is_staff=False, is_supper=False, **extra_fields)
+        return self._create_user(username, password, is_staff=False, is_super=False, **extra_fields)
 
 
     def create_superuser(self, username=None, password=None, **extra_fields):
         if username is None:
-            username = 'user@'
-            while User.objects.filter(username=username).exists():
-                username = username.split('@')[0] + "@"
-                for _ in range(8):
-                    username += str(random.randint(10, 99))
+            username = f"admin_{uuid.uuid4().hex[:8]}"
 
-        return self._create_user(username, password, is_staff=True, is_supper=True, **extra_fields)
+        return self._create_user(username, password, is_staff=True, is_super=True, **extra_fields)
 
 class User(AbstractBaseUser, PermissionsMixin):
     """
