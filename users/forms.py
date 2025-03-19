@@ -3,7 +3,8 @@ from django.contrib.auth import authenticate
 from .models import User
 
 
-class SignupForm(forms.ModelForm):
+class SignUpForm(forms.ModelForm):
+    username = forms.CharField(max_length=32, label="Username")
     password = forms.CharField(widget=forms.PasswordInput, label="Password")
     password_confirm = forms.CharField(widget=forms.PasswordInput, label="Confirm Password")
 
