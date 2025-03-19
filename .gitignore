@@ -2,3 +2,6 @@
 .idea/
 **/__pycache/
 *.pyc
+computerNetworkProject/local_settings.py
+db.sqlite3
+**/migrations/
