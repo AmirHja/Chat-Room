@@ -1,0 +1,34 @@
+{% block content %}
+<h2>Direct Messages| Account {{ user.username }}</h2>
+<label for="receiver">Send message to:</label>
+<input id="receiver" type="text" placeholder="Enter username">
+<input id="dm-message-input" type="text" placeholder="Type a message...">
+<button id="dm-message-submit">Send</button>
+
+<div id="dm-log"></div>
+
+<script>
+    const ws = new WebSocket("ws://" + window.location.host + "/ws/dm/");
+
+    ws.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        document.querySelector("#dm-log").innerHTML += `<p><b>${data.sender}</b> [${data.timestamp}]: ${data.message}</p>`;
+    };
+
+    document.querySelector("#dm-message-submit").onclick = function() {
+        const receiver = document.querySelector("#receiver").value;
+        const messageInput = document.querySelector("#dm-message-input");
+        const message = messageInput.value;
+
+        console.log("📩 ارسال پیام به:", receiver, "محتوا:", message);  // لاگ برای بررسی
+
+        ws.send(JSON.stringify({
+            "receiver": receiver,
+            "message": message
+        }));
+
+        messageInput.value = "";
+    };
+</script>
+
+{% endblock %}

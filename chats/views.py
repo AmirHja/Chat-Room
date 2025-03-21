@@ -1,18 +1,23 @@
-from django.http.response  import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from .models import Message, Room
+from .models import PublicMessage, Room, PrivateMessage
 
 
 
-def chat_room(request, room_name):
+def public_message(request, room_name):
     if request.user.is_authenticated:
         room = get_object_or_404(Room, name=room_name)
-        messages = Message.objects.filter(room=room).order_by("created_at")
+        messages = PublicMessage.objects.filter(room=room).order_by("created_at")
 
-        return render(request, "chats/chat_room.html", {
+        return render(request, "chats/public_message.html", {
             "room_name": room.name,
             "messages": messages
         })
+    else:
+        return render(request, 'chats/forbidden.html')
+
+def private_message(request):
+    if request.user.is_authenticated:
+        messages = PrivateMessage.objects.filter(receiver=request.user).order_by("created_at")
+        return render(request, "chats/private_message.html", {"messages": messages})
     else:
         return render(request, 'chats/forbidden.html')

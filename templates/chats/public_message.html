@@ -8,7 +8,13 @@
 <h2>Chat Room: {{ room_name }}</h2>
 <div id="chat-log">
     {% for msg in messages %}
-        <p><b>{{ msg.user.username }}</b> [{{ msg.created_at|date:"H:i" }}]: {{ msg.message }}</p>
+        <p><b>{{ msg.sender.username }}</b>
+            {% if msg.sender.is_staff %}
+                (Admin)
+            {% endif %}
+            [{{ msg.created_at|date:"Y-m-d H:i" }}]: <br>
+            {{ msg.message }}</p>
+        <br>
     {% endfor %}
 </div>
 <input id="chat-message-input" type="text">

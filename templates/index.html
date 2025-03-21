@@ -8,6 +8,7 @@
     {% if user.is_authenticated %}
         <div style="text-align: center; background-color: #f0f0f0; padding: 10px;">
             <p>{{ user.username }}</p>
+            <a href={% url 'logout' %}>logout</a>
         </div>
     {% endif %}
     <a href={% url 'signup' %}>sign up</a>

@@ -14,7 +14,7 @@ class UserManager(BaseUserManager):
 
     def _create_user(self, username, password, is_staff, is_super, **extra_fields):
         """
-        Create and save a user with the given username and password.
+        Create and save a sender with the given username and password.
         """
         now = timezone.now()
         if not username:
@@ -67,19 +67,19 @@ class User(AbstractBaseUser, PermissionsMixin):
             )
         ],
         error_messages={
-            'unique': _("A user with that username already exists."),
+            'unique': _("A sender with that username already exists."),
         }
     )
     is_staff = models.BooleanField(
         verbose_name=_('staff status'),
         default=False,
-        help_text=_('Designates whether the user can log into this admin site.')
+        help_text=_('Designates whether the sender can log into this admin site.')
     )
     is_active = models.BooleanField(
         verbose_name=_('active status'),
         default=True,
         help_text=_(
-            'Designates whether this user should be treated as active.'
+            'Designates whether this sender should be treated as active.'
             'Unselect this instead of deleting accounts.'
         )
     )
@@ -92,7 +92,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         db_table = 'users'
-        verbose_name = _('user')
+        verbose_name = _('sender')
         verbose_name_plural = _('users')
 
     def save(self, *args, **kwargs):
