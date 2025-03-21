@@ -3,7 +3,7 @@ from .local_settings import *
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+DEBUG = True
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -11,8 +11,12 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    "daphne",
     'django.contrib.staticfiles',
-    "users.apps.UsersConfig"
+    "channels",
+    "users",
+    "chats",
+
 ]
 
 MIDDLEWARE = [
@@ -78,3 +82,11 @@ STATIC_URL = 'static/'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Websocket
+ASGI_APPLICATION = "computerNetworkProject.asgi.application"
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}

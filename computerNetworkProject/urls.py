@@ -8,4 +8,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
     path('', views.index_view, name='home'),
+    path('chat/', include('chats.urls')),
 ]
