@@ -13,7 +13,7 @@ def signup_view(request):
             user.set_password(form.cleaned_data['password'])
             user.save()
             login(request, user)
-            return redirect('home')
+            return redirect('login')
     else:
         form = SignUpForm()
 
@@ -29,7 +29,7 @@ def login_view(request):
             user = authenticate(username=username, password=password)
             if user:
                 login(request, user)
-                return redirect('home')
+                return redirect('http://127.0.0.1:8000/chat/Test-room/')
     else:
         form = LoginForm()
 

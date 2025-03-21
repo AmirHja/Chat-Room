@@ -1,6 +1,16 @@
 {% block content %}
+    {% if user.is_authenticated %}
+        <div style="text-align: center; background-color: #f0f0f0; padding: 10px;">
+            <p>{{ user.username }}</p>
+            <a href={% url 'logout' %}>log out</a>
+        </div>
+    {% endif %}
 <h2>Chat Room: {{ room_name }}</h2>
-<div id="chat-log"></div>
+<div id="chat-log">
+    {% for msg in messages %}
+        <p><b>{{ msg.user.username }}</b> [{{ msg.created_at|date:"H:i" }}]: {{ msg.message }}</p>
+    {% endfor %}
+</div>
 <input id="chat-message-input" type="text">
 <button id="chat-message-submit">Send</button>
 
@@ -10,7 +20,7 @@
 
     ws.onmessage = function(event) {
         const data = JSON.parse(event.data);
-        document.querySelector("#chat-log").innerHTML += `<p><b>${data.username}:</b> ${data.message}</p>`;
+        document.querySelector("#chat-log").innerHTML += `<p><b>${data.username}</b> [${data.timestamp}]: ${data.message}</p>`;
     };
 
     document.querySelector("#chat-message-submit").onclick = function() {
