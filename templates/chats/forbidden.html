@@ -1,0 +1,13 @@
+{% block content %}
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>403 Forbiden</title>
+    </head>
+    <body>
+    <h1>403 Forbidden: You need to login first! </h1>
+        <a href = "{% url "login" %}"> log in</a>
+    </body>
+</html>
+{% endblock  %}
