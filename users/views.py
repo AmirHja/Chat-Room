@@ -13,7 +13,7 @@ def signup_view(request):
             user.set_password(form.cleaned_data['password'])
             user.save()
             login(request, user)
-            return redirect('')
+            return redirect('home')
     else:
         form = SignUpForm()
 
@@ -39,4 +39,4 @@ def login_view(request):
 @login_required
 def logout_view(request):
     logout(request)
-    return redirect('')
+    return redirect('home')
