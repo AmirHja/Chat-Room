@@ -1,34 +1,88 @@
 {% block content %}
-<h2>Direct Messages| Account {{ user.username }}</h2>
-<label for="receiver">Send message to:</label>
-<input id="receiver" type="text" placeholder="Enter username">
-<input id="dm-message-input" type="text" placeholder="Type a message...">
-<button id="dm-message-submit">Send</button>
+<div class="chat-container">
+    <div class="chat-sidebar">
+        <h3>Contacts👥</h3>
+        <button id="new-chat-btn">New chat➕</button>
+        <ul id="chat-list">
+            {% for partner in chat_partners %}
+                <li>
+                    <a href="#" class="chat-user" data-username="{{ partner.username }}">
+                        {{ partner.username }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
 
-<div id="dm-log"></div>
-
+    <div class="chat-box">
+        <h3 id="chat-title">SELECT A PV🔵</h3>
+        <div id="chat-messages"></div>
+        <input type="text" id="chat-input" placeholder="Message...">
+        <button id="send-btn">Send📤</button>
+    </div>
+</div>
+    
 <script>
-    const ws = new WebSocket("ws://" + window.location.host + "/ws/dm/");
+    let selectedUser = null;
+    const chatMessages = document.getElementById("chat-messages");
+    const chatInput = document.getElementById("chat-input");
+    const chatList = document.getElementById("chat-list");
 
-    ws.onmessage = function(event) {
-        const data = JSON.parse(event.data);
-        document.querySelector("#dm-log").innerHTML += `<p><b>${data.sender}</b> [${data.timestamp}]: ${data.message}</p>`;
-    };
+    document.querySelectorAll(".chat-user").forEach(user => {
+        user.addEventListener("click", function () {
+            selectedUser = this.dataset.username;
+            document.getElementById("chat-title").innerText = `${selectedUser}🗣️`;
+            chatMessages.innerHTML = "Loading...";
 
-    document.querySelector("#dm-message-submit").onclick = function() {
-        const receiver = document.querySelector("#receiver").value;
-        const messageInput = document.querySelector("#dm-message-input");
-        const message = messageInput.value;
+            fetch(`/chat/load_messages/${selectedUser}/`)
+                .then(response => response.json())
+                .then(data => {
+                    chatMessages.innerHTML = "";
+                    data.messages.forEach(msg => {
+                        chatMessages.innerHTML += `<p><b>${msg.sender}:</b> ${msg.message} <small>${msg.timestamp}</small></p>`;
+                    });
+                });
+        });
+    });
 
-        console.log("📩 ارسال پیام به:", receiver, "محتوا:", message);  // لاگ برای بررسی
+    document.getElementById("send-btn").addEventListener("click", function () {
+        if (selectedUser && chatInput.value.trim() !== "") {
+            fetch(`/chat/send_message/`, {
+                method: "POST",
+                headers: { "X-CSRFToken": "{{ csrf_token }}", "Content-Type": "application/x-www-form-urlencoded" },
+                body: `receiver=${selectedUser}&message=${chatInput.value}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                chatMessages.innerHTML += `<p><b>{{user}}:</b> ${data.message} <small>${data.timestamp}</small></p>`;
+                chatInput.value = "";
+            });
+        }
+    });
 
-        ws.send(JSON.stringify({
-            "receiver": receiver,
-            "message": message
-        }));
 
-        messageInput.value = "";
-    };
+    document.getElementById("new-chat-btn").addEventListener("click", function () {
+        let newUser = prompt("نام کاربری شخص مورد نظر را وارد کنید:");
+        if (newUser) {
+            let newChat = document.createElement("li");
+            newChat.innerHTML = `<a href="#" class="chat-user" data-username="${newUser}">${newUser}</a>`;
+            chatList.appendChild(newChat);
+
+            newChat.querySelector("a").addEventListener("click", function () {
+                selectedUser = newUser;
+                document.getElementById("chat-title").innerText = `🔵 چت با ${selectedUser}`;
+                chatMessages.innerHTML = "چت جدید شروع شد!";
+            });
+        }
+    });
 </script>
 
+<!-- استایل‌ها -->
+<style>
+    .chat-container { display: flex; gap: 20px; }
+    .chat-sidebar { width: 220px; border-right: 2px solid #ccc; padding: 10px; }
+    .chat-box { flex-grow: 1; }
+    #chat-messages { min-height: 200px; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+    button { cursor: pointer; padding: 5px 10px; }
+</style>
 {% endblock %}
