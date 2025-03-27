@@ -96,28 +96,21 @@ class PrivetChat(AsyncWebsocketConsumer):
         message_content = data.get("message", "").strip()
         receiver_username = data.get("receiver")
 
-        print(f"🚀 : {message_content} برای {receiver_username}")  # 👀 اینو اضافه کن
-
         if not message_content or not receiver_username:
-            print("⛔ پیام خالی یا بدون گیرنده!")  # اگر این چاپ شد، یعنی مشکله
             return
 
         try:
             receiver = await User.objects.aget(username=receiver_username)
         except User.DoesNotExist:
-            print("⛔ گیرنده پیدا نشد!")  # بررسی کنیم که گیرنده وجود داره یا نه
             return
 
-        # ذخیره پیام در دیتابیس
         message = await PrivateMessage.objects.acreate(
             sender=self.user,
             receiver=receiver,
             message=message_content
         )
 
-        print(f"✅ پیام ذخیره شد: {message}")  # 👀 اینو اضافه کن که ببینیم پیام واقعاً ذخیره میشه یا نه
 
-        # ارسال پیام به گیرنده
         await self.channel_layer.group_send(
             f"private_{receiver.id}",
             {
@@ -128,8 +121,18 @@ class PrivetChat(AsyncWebsocketConsumer):
             }
         )
 
+
+        await self.channel_layer.group_send(
+            f"private_{self.user.id}",
+            {
+                "type": "private_message",
+                "message": message.message,
+                "sender": self.user.username,
+                "timestamp": str(message.created_at),
+            }
+        )
+
     async def private_message(self, event):
-        print(f"📩 پیام در حال ارسال به کلاینت: {event}")  # بررسی ارسال پیام
 
         await self.send(text_data=json.dumps({
             "message": event["message"],

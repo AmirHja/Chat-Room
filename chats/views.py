@@ -3,7 +3,8 @@ from .models import PublicMessage, Room, PrivateMessage
 
 
 
-def public_message(request, room_name):
+def public_message(request):
+    room_name = "Test-room"
     if request.user.is_authenticated:
         room = get_object_or_404(Room, name=room_name)
         messages = PublicMessage.objects.filter(room=room).order_by("created_at")
