@@ -1,13 +1,26 @@
-{% block content %}
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>403 Forbiden</title>
-    </head>
-    <body>
-    <h1>403 Forbidden: You need to login first! </h1>
-        <a href = "{% url "login" %}"> log in</a>
-    </body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>403 Forbidden</title>
+    <style>
+        body {
+            text-align: center;
+            margin-top: 50px;
+            font-family: Arial, sans-serif;
+        }
+        a {
+            color: white;
+            background: #007bff;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>403 Forbidden</h1>
+    <p>You need to login first!</p>
+    <a href="{% url 'login' %}">Log in</a>
+</body>
 </html>
-{% endblock  %}

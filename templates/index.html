@@ -1,18 +1,87 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en">{% csrf_token %}
+
 <head>
     <meta charset="UTF-8">
     <title>Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .navbar {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 16px;
+        }
+        .navbar a:hover {
+            text-decoration: underline;
+        }
+        .auth-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            margin-top: 20px;
+        }
+        .auth-box p {
+            margin: 0;
+            font-weight: bold;
+            color: #333;
+        }
+        .btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 15px;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background-color: #218838;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+    </style>
 </head>
 <body>
+
     {% if user.is_authenticated %}
-        <div style="text-align: center; background-color: #f0f0f0; padding: 10px;">
-            <p>{{ user.username }}</p>
-            <a href={% url 'logout' %}>logout</a>
+        <div class="auth-box">
+            <p>Welcome, {{ user.username }}!</p>
+            <a href="{% url 'logout' %}" class="btn btn-danger">Logout</a>
+            <br><br>
+            <a href="{% url 'chat_room' %}" class="navbar">chat room</a>
+            <br><br>
+            <a href="{% url 'direct_messages' %}" class="navbar">DM</a>
+        </div>
+        
+    {% endif %}
+    {% if not user.is_authenticated %}
+        <div class="navbar">
+            <a href="{% url 'signup' %}">Sign Up</a>
+            <a href="{% url 'login' %}">Log In</a>
         </div>
     {% endif %}
-    <a href={% url 'signup' %}>sign up</a>
-    <br></br>
-    <a href={% url 'login' %}>log in</a>
+    
+    
+
 </body>
 </html>

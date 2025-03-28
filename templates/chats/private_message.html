@@ -1,88 +1,202 @@
-{% block content %}
-<div class="chat-container">
-    <div class="chat-sidebar">
-        <h3>Contacts👥</h3>
-        <button id="new-chat-btn">New chat➕</button>
-        <ul id="chat-list">
-            {% for partner in chat_partners %}
-                <li>
-                    <a href="#" class="chat-user" data-username="{{ partner.username }}">
-                        {{ partner.username }}
-                    </a>
-                </li>
-            {% endfor %}
-        </ul>
-    </div>
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Private Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
 
-    <div class="chat-box">
-        <h3 id="chat-title">SELECT A PV🔵</h3>
-        <div id="chat-messages"></div>
-        <input type="text" id="chat-input" placeholder="Message...">
-        <button id="send-btn">Send📤</button>
-    </div>
-</div>
-    
-<script>
-    let selectedUser = null;
-    const chatMessages = document.getElementById("chat-messages");
-    const chatInput = document.getElementById("chat-input");
-    const chatList = document.getElementById("chat-list");
+        h1 {
+            color: #333;
+        }
 
-    document.querySelectorAll(".chat-user").forEach(user => {
-        user.addEventListener("click", function () {
-            selectedUser = this.dataset.username;
-            document.getElementById("chat-title").innerText = `${selectedUser}🗣️`;
-            chatMessages.innerHTML = "Loading...";
+        .container {
+            display: flex;
+            gap: 20px;
+            width: 80%;
+            max-width: 900px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
 
-            fetch(`/chat/load_messages/${selectedUser}/`)
+        .chat-list {
+            width: 30%;
+            border-right: 2px solid #ddd;
+            padding-right: 10px;
+        }
+
+        .chat-list ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .chat-list li {
+            margin-bottom: 10px;
+        }
+
+        .chat-list button {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .chat-list button:hover {
+            background: #0056b3;
+        }
+
+        .chat-box {
+            width: 70%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        #chat-box {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+
+        .message {
+            padding: 8px;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+
+        .sender {
+            background: #007bff;
+            color: white;
+            text-align: right;
+        }
+
+        .receiver {
+            background: #ddd;
+            text-align: left;
+        }
+
+        input {
+            width: 80%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 8px 15px;
+            border: none;
+            background: #28a745;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #218838;
+        }
+    </style>
+    <script>
+        var ws;
+        function openChat(username) {
+            document.getElementById("chat-title").innerText = "Chat with " + username;
+            document.getElementById("chat-box").innerHTML = "<p>Loading messages...</p>";
+
+            if (ws) ws.close();
+
+            ws = new WebSocket("ws://" + window.location.host + "/ws/dm/");
+
+            ws.onopen = function () {
+                console.log("Connected!");
+                loadMessages(username);
+            };
+
+            ws.onmessage = function (event) {
+                var data = JSON.parse(event.data);
+                var chatBox = document.getElementById("chat-box");
+                var messageClass = data.sender === "{{ request.user.username }}" ? "sender" : "receiver";
+                chatBox.innerHTML += `<p class="message ${messageClass}"><b>${data.sender}:</b> ${data.message}</p>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            };
+
+            ws.onclose = function () {
+                console.log("Connection closed!");
+            };
+
+            document.getElementById("send-btn").onclick = function () {
+                var message = document.getElementById("message-input").value;
+                if (message.trim() !== "") {
+                    ws.send(JSON.stringify({ "message": message, "receiver": username }));
+                    document.getElementById("message-input").value = "";
+                }
+            };
+        }
+
+        function loadMessages(username) {
+            fetch(`/chat/load_messages/${username}/`)
                 .then(response => response.json())
                 .then(data => {
-                    chatMessages.innerHTML = "";
+                    var chatBox = document.getElementById("chat-box");
+                    chatBox.innerHTML = "";
                     data.messages.forEach(msg => {
-                        chatMessages.innerHTML += `<p><b>${msg.sender}:</b> ${msg.message} <small>${msg.timestamp}</small></p>`;
+                        var messageClass = msg.sender === "{{ request.user.username }}" ? "sender" : "receiver";
+                        chatBox.innerHTML += `<p class="message ${messageClass}"><b>${msg.sender}:</b> ${msg.message}</p>`;
                     });
-                });
-        });
-    });
-
-    document.getElementById("send-btn").addEventListener("click", function () {
-        if (selectedUser && chatInput.value.trim() !== "") {
-            fetch(`/chat/send_message/`, {
-                method: "POST",
-                headers: { "X-CSRFToken": "{{ csrf_token }}", "Content-Type": "application/x-www-form-urlencoded" },
-                body: `receiver=${selectedUser}&message=${chatInput.value}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                chatMessages.innerHTML += `<p><b>{{user}}:</b> ${data.message} <small>${data.timestamp}</small></p>`;
-                chatInput.value = "";
-            });
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                })
+                .catch(error => console.error("Error loading messages:", error));
         }
-    });
 
-
-    document.getElementById("new-chat-btn").addEventListener("click", function () {
-        let newUser = prompt("نام کاربری شخص مورد نظر را وارد کنید:");
-        if (newUser) {
-            let newChat = document.createElement("li");
-            newChat.innerHTML = `<a href="#" class="chat-user" data-username="${newUser}">${newUser}</a>`;
-            chatList.appendChild(newChat);
-
-            newChat.querySelector("a").addEventListener("click", function () {
-                selectedUser = newUser;
-                document.getElementById("chat-title").innerText = `🔵 چت با ${selectedUser}`;
-                chatMessages.innerHTML = "چت جدید شروع شد!";
-            });
+        function newChat() {
+            var username = prompt("Enter the username of the person you want to chat with:");
+            if (username) {
+                openChat(username);
+            }
         }
-    });
-</script>
+    </script>
+</head>
+<body>
+    <h1>Private Chat</h1>
 
-<!-- استایل‌ها -->
-<style>
-    .chat-container { display: flex; gap: 20px; }
-    .chat-sidebar { width: 220px; border-right: 2px solid #ccc; padding: 10px; }
-    .chat-box { flex-grow: 1; }
-    #chat-messages { min-height: 200px; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
-    button { cursor: pointer; padding: 5px 10px; }
-</style>
-{% endblock %}
+    <div class="container">
+        <div class="chat-list">
+            <h2>Chats</h2>
+            <ul>
+                {% for user in chat_users %}
+                    <li><button onclick="openChat('{{ user }}')">{{ user }}</button></li>
+                {% empty %}
+                    <p>No chats yet!</p>
+                {% endfor %}
+            </ul>
+            <button onclick="newChat()" style="background:#ffc107; color:#333;">New Chat</button>
+        </div>
+
+        <div class="chat-box">
+            <h2 id="chat-title">Select a chat</h2>
+            <div id="chat-box"></div>
+            <input type="text" id="message-input" placeholder="Type your message">
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+</body>
+</html>
